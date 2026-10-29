@@ -1,0 +1,9 @@
+---
+- name: Install bounded boot update service
+  ansible.builtin.template:
+    src: rockitdeck-update.service.j2
+    dest: /etc/systemd/system/rockitdeck-update.service
+    mode: '0644'
+  notify: Reload systemd
+# Enable/disable is persistent device state, controlled by bootstrap/systemctl.
+# Do not enable, disable, or restart the currently executing update here.

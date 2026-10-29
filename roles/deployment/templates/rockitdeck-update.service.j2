@@ -1,0 +1,22 @@
+[Unit]
+Description=RockitDeck configuration update (failure does not block writing)
+Wants=network.target NetworkManager.service
+After=network.target NetworkManager.service
+Before=display-manager.service
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/default/rockitdeck
+Environment=GIT_TERMINAL_PROMPT=0
+Environment=GIT_HTTP_LOW_SPEED_LIMIT=1000
+Environment=GIT_HTTP_LOW_SPEED_TIME=15
+Environment=ANSIBLE_LOCAL_TEMP=/var/cache/rockitdeck/ansible-tmp
+# Bounded readiness check, without an independently blocking online target.
+ExecStartPre=-/usr/bin/nm-online --quiet --timeout=15
+ExecStart=/usr/bin/flock --nonblock /run/lock/rockitdeck.lock /usr/bin/ansible-pull --full --only-if-changed --url ${ROCKITDECK_REPOSITORY} --checkout ${ROCKITDECK_BRANCH} --directory /var/lib/rockitdeck/checkout --inventory localhost, --connection local local.yml
+TimeoutStartSec={{ rockitdeck_update_timeout }}
+TimeoutStopSec=10
+KillMode=control-group
+
+[Install]
+WantedBy=graphical.target

@@ -1,0 +1,63 @@
+---
+- name: Create writer session configuration directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: writer
+    group: writer
+    mode: '0755'
+  loop:
+    - /home/writer/.config
+    - /home/writer/.config/autostart
+    - /home/writer/.config/environment.d
+    - /home/writer/.local/share/gnome-shell/extensions/writing@rockitdeck
+- name: Install writer-only shell extension
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "/home/writer/.local/share/gnome-shell/extensions/writing@rockitdeck/{{ item }}"
+    owner: writer
+    group: writer
+    mode: '0644'
+  loop: [extension.js, metadata.json]
+- name: Create dconf profile directory
+  ansible.builtin.file:
+    path: /etc/dconf/profile
+    state: directory
+    mode: '0755'
+- name: Install writer dconf profile
+  ansible.builtin.copy:
+    src: writer.profile
+    dest: /etc/dconf/profile/rockitdeck
+    mode: '0644'
+- name: Select writer-only dconf profile
+  ansible.builtin.copy:
+    dest: /home/writer/.config/environment.d/90-rockitdeck.conf
+    content: |
+      DCONF_PROFILE=rockitdeck
+    owner: writer
+    group: writer
+    mode: '0644'
+- name: Create managed dconf database source
+  ansible.builtin.file:
+    path: /etc/dconf/db/rockitdeck.d
+    state: directory
+    mode: '0755'
+- name: Install writer shell defaults
+  ansible.builtin.copy:
+    src: writer.dconf
+    dest: /etc/dconf/db/rockitdeck.d/00-writing
+    mode: '0644'
+  notify: Update dconf
+- name: Autostart Zettlr in writer session
+  ansible.builtin.copy:
+    dest: /home/writer/.config/autostart/rockitdeck-writing.desktop
+    content: |
+      [Desktop Entry]
+      Type=Application
+      Name=Writing
+      Exec=zettlr --ozone-platform=wayland
+      Terminal=false
+      X-GNOME-Autostart-enabled=true
+    owner: writer
+    group: writer
+    mode: '0644'

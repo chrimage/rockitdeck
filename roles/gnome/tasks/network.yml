@@ -1,0 +1,39 @@
+---
+# Debian netinst leaves its DHCP interface under ifupdown, which GNOME cannot
+# control. Migrate only the unmodified single-interface installer configuration;
+# preserve custom/static networking and all sourced interface definitions.
+- name: Inspect ifupdown configuration
+  ansible.builtin.stat:
+    path: /etc/network/interfaces
+  register: interfaces_file
+- name: Inspect additional interface definitions
+  ansible.builtin.find:
+    paths: /etc/network/interfaces.d
+    file_type: any
+    hidden: true
+  register: interfaces_extra
+- name: Read ifupdown configuration
+  ansible.builtin.slurp:
+    src: /etc/network/interfaces
+  register: interfaces_content
+  when: interfaces_file.stat.exists
+- name: Normalize installer interface configuration
+  ansible.builtin.set_fact:
+    installer_interface_lines: "{{ (interfaces_content.content | b64decode).splitlines() | map('regex_replace', '#.*$', '') | map('trim') | reject('equalto', '') | list }}"
+    installer_interface: "{{ ansible_facts.default_ipv4.interface | default('') }}"
+  when: interfaces_file.stat.exists
+- name: Hand stock netinst DHCP interface to NetworkManager
+  ansible.builtin.copy:
+    dest: /etc/network/interfaces
+    content: |
+      # NetworkManager manages the appliance network interfaces.
+      auto lo
+      iface lo inet loopback
+    mode: '0644'
+    backup: true
+  when:
+    - interfaces_file.stat.exists
+    - interfaces_extra.matched == 0
+    - installer_interface | length > 0
+    - installer_interface_lines == ['source /etc/network/interfaces.d/*', 'auto lo', 'iface lo inet loopback', 'allow-hotplug ' ~ installer_interface, 'iface ' ~ installer_interface ~ ' inet dhcp']
+  notify: Restart NetworkManager

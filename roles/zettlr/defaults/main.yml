@@ -1,0 +1,4 @@
+---
+zettlr_version: '4.9.0'
+zettlr_sha256: '1411b2f544f106e7bae8ed844181d854255c5d0e0c959e9ece8a1fd5f91a9f4f'
+zettlr_url: "https://github.com/Zettlr/Zettlr/releases/download/v{{ zettlr_version }}/Zettlr-{{ zettlr_version }}-amd64.deb"

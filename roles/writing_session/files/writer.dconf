@@ -1,0 +1,24 @@
+[org/gnome/shell]
+enabled-extensions=['writing@rockitdeck']
+disable-user-extensions=false
+favorite-apps=@as []
+
+[org/gnome/desktop/wm/keybindings]
+panel-main-menu=@as []
+switch-applications=@as []
+switch-applications-backward=@as []
+
+[org/gnome/mutter]
+overlay-key=''
+
+[org/gnome/desktop/interface]
+enable-hot-corners=false
+
+[org/gnome/desktop/notifications]
+show-banners=false
+
+[org/gnome/desktop/session]
+idle-delay=uint32 0
+
+[org/gnome/desktop/screensaver]
+lock-enabled=false

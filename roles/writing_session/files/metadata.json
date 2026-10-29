@@ -1,0 +1,7 @@
+{
+  "uuid": "writing@rockitdeck",
+  "name": "RockitDeck Writing Session",
+  "version": 3,
+  "description": "Writer-only soft kiosk: hide overview and maximize Zettlr while retaining Quick Settings.",
+  "shell-version": ["48"]
+}

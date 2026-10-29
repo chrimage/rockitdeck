@@ -1,0 +1,50 @@
+---
+- name: Install minimal GNOME and useful system controls
+  ansible.builtin.apt:
+    name:
+      - gnome-shell
+      - gnome-session
+      - gdm3
+      - gnome-control-center
+      - gnome-settings-daemon
+      - gnome-keyring
+      - network-manager
+      - pipewire-audio
+      - wireplumber
+      - upower
+      - fonts-dejavu-core
+      - fonts-liberation
+      - dbus-user-session
+      - dconf-cli
+      - libgl1-mesa-dri
+    state: present
+    install_recommends: false
+- name: Enable NetworkManager
+  ansible.builtin.systemd_service:
+    name: NetworkManager.service
+    enabled: true
+    state: started
+- name: Integrate stock Debian installer networking
+  ansible.builtin.import_tasks: network.yml
+- name: Configure GDM automatic writer login
+  ansible.builtin.lineinfile:
+    path: /etc/gdm3/daemon.conf
+    regexp: "^#?\\s*{{ item.key }}\\s*="
+    line: "{{ item.key }}={{ item.value }}"
+    insertafter: '^\[daemon\]$'
+    mode: '0644'
+  loop:
+    - {key: AutomaticLoginEnable, value: 'true'}
+    - {key: AutomaticLogin, value: writer}
+    - {key: WaylandEnable, value: 'true'}
+- name: Enable GDM for next boot
+  ansible.builtin.systemd_service:
+    name: gdm3.service
+    enabled: true
+- name: Read default target
+  ansible.builtin.command: systemctl get-default
+  register: default_target
+  changed_when: false
+- name: Select graphical boot
+  ansible.builtin.command: systemctl set-default graphical.target
+  when: default_target.stdout != 'graphical.target'

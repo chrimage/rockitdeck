@@ -1,0 +1,38 @@
+---
+- name: Create package cache
+  ansible.builtin.file:
+    path: /var/cache/rockitdeck
+    state: directory
+    mode: '0755'
+- name: Download pinned Zettlr package
+  ansible.builtin.get_url:
+    url: "{{ zettlr_url }}"
+    dest: "/var/cache/rockitdeck/Zettlr-{{ zettlr_version }}-amd64.deb"
+    checksum: "sha256:{{ zettlr_sha256 }}"
+    mode: '0644'
+    timeout: 60
+- name: Install Zettlr and dependencies
+  ansible.builtin.apt:
+    deb: "/var/cache/rockitdeck/Zettlr-{{ zettlr_version }}-amd64.deb"
+    install_recommends: false
+- name: Create application state directory
+  ansible.builtin.file:
+    path: /home/writer/.config/Zettlr
+    state: directory
+    owner: writer
+    group: writer
+    mode: '0700'
+- name: Seed Zettlr preferences only if none exist
+  ansible.builtin.copy:
+    dest: /home/writer/.config/Zettlr/config.json
+    content: |
+      {
+        "version": "{{ zettlr_version }}",
+        "app": {"openFiles": [], "openWorkspaces": ["/home/writer/Writing"]},
+        "editor": {"autoSave": "immediately"},
+        "system": {"checkForUpdates": false}
+      }
+    force: false
+    owner: writer
+    group: writer
+    mode: '0600'

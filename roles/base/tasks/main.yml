@@ -1,0 +1,36 @@
+---
+- name: Install appliance base packages
+  ansible.builtin.apt:
+    name: [ca-certificates, git, ansible-core, util-linux]
+    state: present
+    update_cache: true
+    cache_valid_time: 86400
+    install_recommends: false
+- name: Set device hostname
+  ansible.builtin.hostname:
+    name: "{{ device_hostname }}"
+- name: Resolve local hostname
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    regexp: '^127\.0\.1\.1\s'
+    line: "127.0.1.1 {{ device_hostname }}"
+- name: Ensure Debian network-control group exists
+  ansible.builtin.group:
+    name: netdev
+    system: true
+- name: Create unprivileged writing account
+  ansible.builtin.user:
+    name: writer
+    comment: "{{ owner_name }}"
+    shell: /bin/bash
+    create_home: true
+    password_lock: true
+    groups: netdev
+    append: true
+- name: Create writing directory without touching contents
+  ansible.builtin.file:
+    path: /home/writer/Writing
+    state: directory
+    owner: writer
+    group: writer
+    mode: '0750'

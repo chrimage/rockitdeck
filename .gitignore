@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.claude/
+.hermes/
+
+# Local lab resources belong outside the checkout; guard against accidents.
+/work/
+/vm/
+/artifacts/

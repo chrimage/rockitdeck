@@ -1,0 +1,23 @@
+---
+- name: Configure RockitDeck
+  hosts: localhost
+  connection: local
+  become: true
+  vars_files:
+    - /etc/rockitdeck/device.yml
+  pre_tasks:
+    - name: Require supported device schema and platform
+      ansible.builtin.assert:
+        that:
+          - schema_version == 1
+          - ansible_facts.distribution == 'Debian'
+          - ansible_facts.distribution_major_version == '13'
+          - ansible_facts.architecture == 'x86_64'
+          - owner_name | length > 0
+          - device_hostname is match('^[a-z0-9][a-z0-9-]{0,62}$')
+  roles:
+    - base
+    - gnome
+    - zettlr
+    - writing_session
+    - deployment
